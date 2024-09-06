@@ -346,7 +346,7 @@ class TestFigureShow:
         fig.basemap(region="10/70/-300/800", projection="X3i/5i", frame="af")
         fig.show()
 
-    def test_figure_show_invalid_method(self):
+    def test_invalid_method(self):
         """
         Test to check if an error is raised when an invalid method is passed to show.
         """
@@ -355,8 +355,8 @@ class TestFigureShow:
         with pytest.raises(GMTInvalidInput):
             fig.show(method="test")
 
-    @pytest.mark.skipif(_HAS_IPYTHON, reason="run without IPython installed")
-    def test_figure_show_notebook_error_without_ipython(self):
+    @pytest.mark.skipif(_HAS_IPYTHON, reason="Run without IPython installed")
+    def test_notebook_error_without_ipython(self):
         """
         Test to check if an error is raised when display method is 'notebook', but
         IPython is not installed.
@@ -366,7 +366,7 @@ class TestFigureShow:
         with pytest.raises(GMTError):
             fig.show(method="notebook")
 
-    def test_figure_display_external(self):
+    def test_display_external(self):
         """
         Test to check that a figure can be displayed in an external window.
         """
