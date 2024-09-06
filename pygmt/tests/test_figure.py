@@ -312,16 +312,6 @@ def test_figure_savefig_worldfile():
                 fig.savefig(fname=imgfile.name, worldfile=True)
 
 
-@pytest.mark.skipif(not _HAS_IPYTHON, reason="run when IPython is installed")
-def test_figure_show():
-    """
-    Test that show creates the correct file name and deletes the temp dir.
-    """
-    fig = Figure()
-    fig.basemap(region="10/70/-300/800", projection="X3i/5i", frame="af")
-    fig.show()
-
-
 @pytest.mark.mpl_image_compare
 def test_figure_shift_origin():
     """
@@ -342,35 +332,47 @@ def test_figure_shift_origin():
     return fig
 
 
-def test_figure_show_invalid_method():
+class TestFigureShow:
     """
-    Test to check if an error is raised when an invalid method is passed to show.
+    Test the Figure.show method.
     """
-    fig = Figure()
-    fig.basemap(region="10/70/-300/800", projection="X3i/5i", frame="af")
-    with pytest.raises(GMTInvalidInput):
-        fig.show(method="test")
 
+    @pytest.mark.skipif(not _HAS_IPYTHON, reason="run when IPython is installed")
+    def test_figure_show(self):
+        """
+        Test that show creates the correct file name and deletes the temp dir.
+        """
+        fig = Figure()
+        fig.basemap(region="10/70/-300/800", projection="X3i/5i", frame="af")
+        fig.show()
 
-@pytest.mark.skipif(_HAS_IPYTHON, reason="run without IPython installed")
-def test_figure_show_notebook_error_without_ipython():
-    """
-    Test to check if an error is raised when display method is 'notebook', but IPython
-    is not installed.
-    """
-    fig = Figure()
-    fig.basemap(region=[0, 1, 2, 3], frame=True)
-    with pytest.raises(GMTError):
-        fig.show(method="notebook")
+    def test_figure_show_invalid_method(self):
+        """
+        Test to check if an error is raised when an invalid method is passed to show.
+        """
+        fig = Figure()
+        fig.basemap(region="10/70/-300/800", projection="X3i/5i", frame="af")
+        with pytest.raises(GMTInvalidInput):
+            fig.show(method="test")
 
+    @pytest.mark.skipif(_HAS_IPYTHON, reason="run without IPython installed")
+    def test_figure_show_notebook_error_without_ipython(self):
+        """
+        Test to check if an error is raised when display method is 'notebook', but
+        IPython is not installed.
+        """
+        fig = Figure()
+        fig.basemap(region=[0, 1, 2, 3], frame=True)
+        with pytest.raises(GMTError):
+            fig.show(method="notebook")
 
-def test_figure_display_external():
-    """
-    Test to check that a figure can be displayed in an external window.
-    """
-    fig = Figure()
-    fig.basemap(region=[0, 3, 6, 9], projection="X1c", frame=True)
-    fig.show(method="external")
+    def test_figure_display_external(self):
+        """
+        Test to check that a figure can be displayed in an external window.
+        """
+        fig = Figure()
+        fig.basemap(region=[0, 3, 6, 9], projection="X1c", frame=True)
+        fig.show(method="external")
 
 
 class TestSetDisplay:
