@@ -346,10 +346,6 @@ def non_ascii_to_octal(
 
     # Remove any printable characters.
     mapping = {k: v for k, v in mapping.items() if k not in string.printable}
-    # Mapping single quote ' and double quote " to octal codes because they often cause
-    # troubles.
-    mapping['"'] = "\\042"
-    mapping["'"] = "\\234"  # Not \047
     return argstr.translate(str.maketrans(mapping))
 
 
