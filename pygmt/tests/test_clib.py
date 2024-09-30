@@ -65,15 +65,13 @@ def mock(session, func, returns=None, mock_func=None):
 
 def test_getitem():
     """
-    Test that I can get correct constants from the C lib.
+    Test getting the GMT constants from the C library.
     """
-    ses = clib.Session()
-    assert ses["GMT_SESSION_EXTERNAL"] != -99999
-    assert ses["GMT_MODULE_CMD"] != -99999
-    assert ses["GMT_PAD_DEFAULT"] != -99999
-    assert ses["GMT_DOUBLE"] != -99999
-    with pytest.raises(GMTCLibError):
-        ses["A_WHOLE_LOT_OF_JUNK"]
+    with clib.Session() as lib:
+        for name in ["GMT_SESSION_EXTERNAL", "GMT_MODULE_CMD", "GMT_DOUBLE"]:
+            assert lib[name] != -99999
+        with pytest.raises(GMTCLibError):
+            lib["A_WHOLE_LOT_OF_JUNK"]
 
 
 def test_create_destroy_session():
@@ -181,7 +179,7 @@ def test_call_module_invalid_arguments():
     """
     with clib.Session() as lib:
         with pytest.raises(GMTCLibError):
-            lib.call_module("info", "bogus-data.bla")
+            lib.call_module("info", ["bogus-data.bla"])
 
 
 def test_call_module_invalid_name():
@@ -190,7 +188,7 @@ def test_call_module_invalid_name():
     """
     with clib.Session() as lib:
         with pytest.raises(GMTCLibError):
-            lib.call_module("meh", "")
+            lib.call_module("meh", [])
 
 
 def test_call_module_error_message():
@@ -199,7 +197,7 @@ def test_call_module_error_message():
     """
     with clib.Session() as lib:
         with pytest.raises(GMTCLibError) as exc_info:
-            lib.call_module("info", "bogus-data.bla")
+            lib.call_module("info", ["bogus-data.bla"])
         assert "Module 'info' failed with status code" in exc_info.value.args[0]
         assert (
             "gmtinfo [ERROR]: Cannot find file bogus-data.bla" in exc_info.value.args[0]
@@ -213,7 +211,7 @@ def test_method_no_session():
     # Create an instance of Session without "with" so no session is created.
     lib = clib.Session()
     with pytest.raises(GMTCLibNoSessionError):
-        lib.call_module("gmtdefaults", "")
+        lib.call_module("gmtdefaults", [])
     with pytest.raises(GMTCLibNoSessionError):
         _ = lib.session_pointer
 
@@ -385,14 +383,14 @@ def test_extract_region_two_figures():
     # Activate the first figure and extract the region from it
     # Use in a different session to avoid any memory problems.
     with clib.Session() as lib:
-        lib.call_module("figure", f"{fig1._name} -")
+        lib.call_module("figure", [fig1._name, "-"])
     with clib.Session() as lib:
         wesn1 = lib.extract_region()
         npt.assert_allclose(wesn1, region1)
 
     # Now try it with the second one
     with clib.Session() as lib:
-        lib.call_module("figure", f"{fig2._name} -")
+        lib.call_module("figure", [fig2._name, "-"])
     with clib.Session() as lib:
         wesn2 = lib.extract_region()
         npt.assert_allclose(wesn2, np.array([-165.0, -150.0, 15.0, 25.0]))
@@ -531,9 +529,10 @@ def test_get_default():
     Make sure get_default works without crashing and gives reasonable results.
     """
     with clib.Session() as lib:
-        assert lib.get_default("API_GRID_LAYOUT") in ["rows", "columns"]
+        assert lib.get_default("API_GRID_LAYOUT") in {"rows", "columns"}
         assert int(lib.get_default("API_CORES")) >= 1
         assert Version(lib.get_default("API_VERSION")) >= Version("6.3.0")
+        assert lib.get_default("PROJ_LENGTH_UNIT") == "cm"
 
 
 def test_get_default_fails():
@@ -578,27 +577,24 @@ def test_info_dict():
     ses.destroy()
 
 
-def test_fails_for_wrong_version():
+def test_fails_for_wrong_version(monkeypatch):
     """
-    Make sure the clib.Session raises an exception if GMT is too old.
+    Make sure that importing clib raise an exception if GMT is too old.
     """
+    import importlib
 
-    # Mock GMT_Get_Default to return an old version
-    def mock_defaults(api, name, value):  # noqa: ARG001
-        """
-        Return an old version.
-        """
-        if name == b"API_VERSION":
-            value.value = b"5.4.3"
-        else:
-            value.value = b"bla"
-        return 0
+    with monkeypatch.context() as mpatch:
+        # Make sure the current GMT major version is 6.
+        assert clib.__gmt_version__.split(".")[0] == "6"
 
-    lib = clib.Session()
-    with mock(lib, "GMT_Get_Default", mock_func=mock_defaults):
+        # Monkeypatch the version string returned by pygmt.clib.loading.get_gmt_version.
+        mpatch.setattr(clib.loading, "get_gmt_version", lambda libgmt: "5.4.3")  # noqa: ARG005
+
+        # Reload clib.session and check the __gmt_version__ string.
+        importlib.reload(clib.session)
+        assert clib.session.__gmt_version__ == "5.4.3"
+
+        # Should raise an exception when pygmt.clib is loaded/reloaded.
         with pytest.raises(GMTVersionError):
-            with lib:
-                assert lib.info["version"] != "5.4.3"
-    # Make sure the session is closed when the exception is raised.
-    with pytest.raises(GMTCLibNoSessionError):
-        assert lib.session_pointer
+            importlib.reload(clib)
+        assert clib.__gmt_version__ == "5.4.3"  # Make sure it's still the old version

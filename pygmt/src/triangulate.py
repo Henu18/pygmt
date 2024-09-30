@@ -7,6 +7,7 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 from pygmt.clib import Session
 from pygmt.helpers import (
     build_arg_list,
@@ -65,7 +66,7 @@ class triangulate:  # noqa: N801
     @kwargs_to_strings(I="sequence", R="sequence", i="sequence_comma")
     def regular_grid(
         data=None, x=None, y=None, z=None, outgrid: str | None = None, **kwargs
-    ):
+    ) -> xr.DataArray | None:
         """
         Delaunay triangle based gridding of Cartesian data.
 
@@ -121,7 +122,7 @@ class triangulate:  # noqa: N801
 
         Returns
         -------
-        ret: xarray.DataArray or None
+        ret
             Return type depends on whether the ``outgrid`` parameter is set:
 
             - xarray.DataArray if ``outgrid`` is None (default)
@@ -233,7 +234,7 @@ class triangulate:  # noqa: N801
         ``triangulate`` is a Cartesian or small-geographic area operator and is
         unaware of periodic or polar boundary conditions.
         """
-        output_type = validate_output_table_type(output_type, outfile)
+        output_type = validate_output_table_type(output_type, outfile=outfile)
 
         with Session() as lib:
             with (

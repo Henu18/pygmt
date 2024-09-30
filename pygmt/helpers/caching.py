@@ -13,7 +13,7 @@ def cache_data():
     datasets = [
         # List of GMT remote datasets.
         "@earth_age_01d_g",
-        "@earth_day_01d_p",
+        "@earth_day_01d",
         "@earth_faa_01d_g",
         "@earth_gebco_01d_g",
         "@earth_gebcosi_01d_g",
@@ -22,6 +22,7 @@ def cache_data():
         "@earth_mag_01d_g",
         "@earth_mag4km_01d_g",
         "@earth_mask_01d_g",
+        "@earth_night_01d",
         "@earth_relief_01d_g",
         "@earth_relief_01d_p",
         "@earth_relief_10m_g",
@@ -42,6 +43,8 @@ def cache_data():
         # Names like @N35E135.earth_relief_03s_g.nc are for internal use only.
         # The naming scheme may change. DO NOT USE IT IN YOUR SCRIPTS.
         "@N00W030.earth_age_01m_g.nc",
+        "@N30E060.earth_age_01m_g.nc",
+        "@N30E090.earth_age_01m_g.nc",
         "@N00W030.earth_faa_01m_p.nc",
         "@N00W030.earth_geoid_01m_g.nc",
         "@S30W060.earth_mag_02m_p.nc",
@@ -57,9 +60,9 @@ def cache_data():
         "@N00W030.earth_vgg_01m_p.nc",
         "@S90E000.earth_wdmam_03m_g.nc",
         "@N00W030.mars_relief_01m_g.nc",
-        "@N00W030.mercury_relief_01m_p.nc",
-        "@N00W030.moon_relief_01m_p.nc",
-        "@N00W030.pluto_relief_01m_p.nc",
+        "@N00W030.mercury_relief_01m_g.nc",
+        "@N00W030.moon_relief_01m_g.nc",
+        "@N00W030.pluto_relief_01m_g.nc",
         "@N00W030.venus_relief_01m_g.nc",
         # List of cache files.
         "@EGM96_to_36.txt",

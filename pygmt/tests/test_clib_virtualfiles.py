@@ -2,6 +2,7 @@
 Test the C API functions related to virtual files.
 """
 
+import io
 from importlib.util import find_spec
 from itertools import product
 from pathlib import Path
@@ -69,7 +70,7 @@ def test_virtual_file(dtypes):
             vfargs = (family, geometry, "GMT_IN|GMT_IS_REFERENCE", dataset)
             with lib.open_virtualfile(*vfargs) as vfile:
                 with GMTTempFile() as outfile:
-                    lib.call_module("info", f"{vfile} ->{outfile.name}")
+                    lib.call_module("info", [vfile, f"->{outfile.name}"])
                     output = outfile.read(keep_tabs=True)
             bounds = "\t".join([f"<{col.min():.0f}/{col.max():.0f}>" for col in data.T])
             expected = f"<matrix memory>: N = {shape[0]}\t{bounds}\n"
@@ -144,7 +145,7 @@ def test_virtualfile_in_required_z_matrix(array_func, kind):
             data=data, required_z=True, check_kind="vector"
         ) as vfile:
             with GMTTempFile() as outfile:
-                lib.call_module("info", f"{vfile} ->{outfile.name}")
+                lib.call_module("info", [vfile, f"->{outfile.name}"])
                 output = outfile.read(keep_tabs=True)
         bounds = "\t".join(
             [
@@ -217,7 +218,7 @@ def test_virtualfile_from_vectors(dtypes):
         with clib.Session() as lib:
             with lib.virtualfile_from_vectors(x, y, z) as vfile:
                 with GMTTempFile() as outfile:
-                    lib.call_module("info", f"{vfile} ->{outfile.name}")
+                    lib.call_module("info", [vfile, f"->{outfile.name}"])
                     output = outfile.read(keep_tabs=True)
             bounds = "\t".join([f"<{i.min():.0f}/{i.max():.0f}>" for i in (x, y, z)])
             expected = f"<vector memory>: N = {size}\t{bounds}\n"
@@ -237,7 +238,7 @@ def test_virtualfile_from_vectors_one_string_or_object_column(dtype):
     with clib.Session() as lib:
         with lib.virtualfile_from_vectors(x, y, strings) as vfile:
             with GMTTempFile() as outfile:
-                lib.call_module("convert", f"{vfile} ->{outfile.name}")
+                lib.call_module("convert", [vfile, f"->{outfile.name}"])
                 output = outfile.read(keep_tabs=True)
         expected = "".join(
             f"{i}\t{j}\t{k}\n" for i, j, k in zip(x, y, strings, strict=True)
@@ -259,7 +260,7 @@ def test_virtualfile_from_vectors_two_string_or_object_columns(dtype):
     with clib.Session() as lib:
         with lib.virtualfile_from_vectors(x, y, strings1, strings2) as vfile:
             with GMTTempFile() as outfile:
-                lib.call_module("convert", f"{vfile} ->{outfile.name}")
+                lib.call_module("convert", [vfile, f"->{outfile.name}"])
                 output = outfile.read(keep_tabs=True)
         expected = "".join(
             f"{h}\t{i}\t{j} {k}\n"
@@ -278,7 +279,7 @@ def test_virtualfile_from_vectors_transpose(dtypes):
         with clib.Session() as lib:
             with lib.virtualfile_from_vectors(*data.T) as vfile:
                 with GMTTempFile() as outfile:
-                    lib.call_module("info", f"{vfile} -C ->{outfile.name}")
+                    lib.call_module("info", [vfile, "-C", f"->{outfile.name}"])
                     output = outfile.read(keep_tabs=True)
             bounds = "\t".join([f"{col.min():.0f}\t{col.max():.0f}" for col in data.T])
             expected = f"{bounds}\n"
@@ -308,7 +309,7 @@ def test_virtualfile_from_matrix(dtypes):
         with clib.Session() as lib:
             with lib.virtualfile_from_matrix(data) as vfile:
                 with GMTTempFile() as outfile:
-                    lib.call_module("info", f"{vfile} ->{outfile.name}")
+                    lib.call_module("info", [vfile, f"->{outfile.name}"])
                     output = outfile.read(keep_tabs=True)
             bounds = "\t".join([f"<{col.min():.0f}/{col.max():.0f}>" for col in data.T])
             expected = f"<matrix memory>: N = {shape[0]}\t{bounds}\n"
@@ -328,7 +329,7 @@ def test_virtualfile_from_matrix_slice(dtypes):
         with clib.Session() as lib:
             with lib.virtualfile_from_matrix(data) as vfile:
                 with GMTTempFile() as outfile:
-                    lib.call_module("info", f"{vfile} ->{outfile.name}")
+                    lib.call_module("info", [vfile, f"->{outfile.name}"])
                     output = outfile.read(keep_tabs=True)
             bounds = "\t".join([f"<{col.min():.0f}/{col.max():.0f}>" for col in data.T])
             expected = f"<matrix memory>: N = {rows}\t{bounds}\n"
@@ -354,7 +355,7 @@ def test_virtualfile_from_vectors_pandas(dtypes_pandas):
         with clib.Session() as lib:
             with lib.virtualfile_from_vectors(data.x, data.y, data.z) as vfile:
                 with GMTTempFile() as outfile:
-                    lib.call_module("info", f"{vfile} ->{outfile.name}")
+                    lib.call_module("info", [vfile, f"->{outfile.name}"])
                     output = outfile.read(keep_tabs=True)
             bounds = "\t".join(
                 [f"<{i.min():.0f}/{i.max():.0f}>" for i in (data.x, data.y, data.z)]
@@ -374,7 +375,7 @@ def test_virtualfile_from_vectors_arraylike():
     with clib.Session() as lib:
         with lib.virtualfile_from_vectors(x, y, z) as vfile:
             with GMTTempFile() as outfile:
-                lib.call_module("info", f"{vfile} ->{outfile.name}")
+                lib.call_module("info", [vfile, f"->{outfile.name}"])
                 output = outfile.read(keep_tabs=True)
         bounds = "\t".join([f"<{min(i):.0f}/{max(i):.0f}>" for i in (x, y, z)])
         expected = f"<vector memory>: N = {size}\t{bounds}\n"
@@ -407,3 +408,106 @@ def test_inquire_virtualfile():
         ]:
             with lib.open_virtualfile(family, geometry, "GMT_OUT", None) as vfile:
                 assert lib.inquire_virtualfile(vfile) == lib[family]
+
+
+class TestVirtualfileFromStringIO:
+    """
+    Test the virtualfile_from_stringio method.
+    """
+
+    def _stringio_to_dataset(self, data: io.StringIO):
+        """
+        A helper function for check the virtualfile_from_stringio method.
+
+        The function does the following:
+
+        1. Creates a virtual file from the input StringIO object.
+        2. Pass the virtual file to the ``read`` module, which reads the virtual file
+           and writes it to another virtual file.
+        3. Reads the output virtual file as a GMT_DATASET object.
+        4. Extracts the header and the trailing text from the dataset and returns it as
+           a string.
+        """
+        with clib.Session() as lib:
+            with (
+                lib.virtualfile_from_stringio(data) as vintbl,
+                lib.virtualfile_out(kind="dataset") as vouttbl,
+            ):
+                lib.call_module("read", args=[vintbl, vouttbl, "-Td"])
+                ds = lib.read_virtualfile(vouttbl, kind="dataset").contents
+
+                output = []
+                table = ds.table[0].contents
+                for segment in table.segment[: table.n_segments]:
+                    seg = segment.contents
+                    output.append(f"> {seg.header.decode()}" if seg.header else ">")
+                    output.extend(np.char.decode(seg.text[: seg.n_rows]))
+            return "\n".join(output) + "\n"
+
+    def test_virtualfile_from_stringio(self):
+        """
+        Test the virtualfile_from_stringio method.
+        """
+        data = io.StringIO(
+            "# Comment\n"
+            "H 24p Legend\n"
+            "N 2\n"
+            "S 0.1i c 0.15i p300/12 0.25p 0.3i My circle\n"
+        )
+        expected = (
+            ">\n"
+            "H 24p Legend\n"
+            "N 2\n"
+            "S 0.1i c 0.15i p300/12 0.25p 0.3i My circle\n"
+        )
+        assert self._stringio_to_dataset(data) == expected
+
+    def test_one_segment(self):
+        """
+        Test the virtualfile_from_stringio method with one segment.
+        """
+        data = io.StringIO(
+            "# Comment\n"
+            "> Segment 1\n"
+            "1 2 3 ABC\n"
+            "4 5 DE\n"
+            "6 7 8   9  FGHIJK LMN OPQ\n"
+            "RSTUVWXYZ\n"
+        )
+        expected = (
+            "> Segment 1\n"
+            "1 2 3 ABC\n"
+            "4 5 DE\n"
+            "6 7 8   9  FGHIJK LMN OPQ\n"
+            "RSTUVWXYZ\n"
+        )
+        assert self._stringio_to_dataset(data) == expected
+
+    def test_multiple_segments(self):
+        """
+        Test the virtualfile_from_stringio method with multiple segments.
+        """
+        data = io.StringIO(
+            "# Comment line 1\n"
+            "# Comment line 2\n"
+            "> Segment 1\n"
+            "1 2 3 ABC\n"
+            "4 5 DE\n"
+            "6 7 8   9  FG\n"
+            "# Comment line 3\n"
+            "> Segment 2\n"
+            "1 2 3 ABC\n"
+            "4 5 DE\n"
+            "6 7 8   9  FG\n"
+        )
+        expected = (
+            "> Segment 1\n"
+            "1 2 3 ABC\n"
+            "4 5 DE\n"
+            "6 7 8   9  FG\n"
+            "> Segment 2\n"
+            "1 2 3 ABC\n"
+            "4 5 DE\n"
+            "6 7 8   9  FG\n"
+        )
+        assert self._stringio_to_dataset(data) == expected
