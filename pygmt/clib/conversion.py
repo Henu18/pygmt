@@ -394,7 +394,7 @@ def _array_dtypes(array: Any) -> tuple[str, str]:
     Pandas objects) or "type" (for PyArrow objects) property to determine the dtype. If
     both of these properties are not found (e.g., a list), the dtype is set to an empty
     string. Then the function applies the np.ascontiguousarray function to the input
-    object and determine the dtype of the converted np.ndarray object.
+    object and determines the dtype of the converted np.ndarray object.
 
     The function returns a tuple of the two dtypes. If the output dtype is "object", it
     means np.ascontiguousarray has failed to convert the input object to a NumPy dtype
@@ -404,7 +404,7 @@ def _array_dtypes(array: Any) -> tuple[str, str]:
     mapping from ``string`` to ``np.str_``).
 
     This function is not used anywhere in the project. Instead, similar codes are used
-    in the ``vectors_to_arrays`` function. This function is kept for understand the
+    in the ``vectors_to_arrays`` function. This function is kept for understanding the
     dtype's string representation of different array-like objects and what dtype they
     are converted to by NumPy. This function is kept for understanding the dtype
     conversion process and for testing purposes, since some of the dtypes may change in
