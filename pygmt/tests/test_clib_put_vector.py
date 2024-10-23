@@ -237,7 +237,7 @@ def test_put_vector_wrong_column():
             mode="GMT_CONTAINER_ONLY",
             dim=[1, 3, 0, 0],  # ncolumns, nrows, dtype, unused
         )
-        data = np.array([37, 12, 556], dtype="float32")
+        data = np.array([37, 12, 556], dtype=np.float32)
         with pytest.raises(GMTCLibError):
             lib.put_vector(dataset, column=1, vector=data)
 
@@ -253,6 +253,6 @@ def test_put_vector_2d_fails():
             mode="GMT_CONTAINER_ONLY",
             dim=[1, 6, 0, 0],  # ncolumns, nrows, dtype, unused
         )
-        data = np.array([[37, 12, 556], [37, 12, 556]], dtype="int32")
+        data = np.array([[37, 12, 556], [37, 12, 556]], dtype=np.int32)
         with pytest.raises(GMTInvalidInput):
             lib.put_vector(dataset, column=0, vector=data)
