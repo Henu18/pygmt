@@ -33,6 +33,7 @@ def load_tile_map(
     zoom: int | Literal["auto"] = "auto",
     source: TileProvider | str | None = None,
     lonlat: bool = True,
+    crs: str = "EPSG:3857",
     wait: int = 0,
     max_retries: int = 2,
     zoom_adjust: int | None = None,
@@ -42,7 +43,8 @@ def load_tile_map(
 
     The tiles that compose the map are merged and georeferenced into an
     :class:`xarray.DataArray` image with 3 bands (RGB). Note that the returned image is
-    in a Spherical Mercator (EPSG:3857) coordinate reference system.
+    in a Spherical Mercator (EPSG:3857) coordinate reference system (CRS) by default,
+    but can be customized using the ``crs`` parameter.
 
     Parameters
     ----------
@@ -80,6 +82,10 @@ def load_tile_map(
     lonlat
         If ``False``, coordinates in ``region`` are assumed to be Spherical Mercator as
         opposed to longitude/latitude.
+    crs
+        Coordinate reference system of the returned georeferenced 3-D data array.
+        Default is ``"EPSG:3857"`` (i.e., Spherical Mercator). The CRS can be in any
+        format supported by :doc:`rasterio <rasterio:topics/referencing>`.
     wait
         If the tile API is rate-limited, the number of seconds to wait between a failed
         request and the next try.
@@ -158,6 +164,10 @@ def load_tile_map(
         **contextily_kwargs,
     )
 
+    # contextily.bounds2img returns an image in EPSG:3857. Warp it to the desired CRS.
+    if crs != "EPSG:3857":
+        image, extent = contextily.warp_tiles(image, extent, t_crs=crs)
+
     # Turn RGBA img from channel-last to channel-first and get 3-band RGB only
     _image = image.transpose(2, 0, 1)  # Change image from (H, W, C) to (C, H, W)
     rgb_image = _image[0:3, :, :]  # Get just RGB by dropping RGBA's alpha channel
@@ -176,6 +186,6 @@ def load_tile_map(
 
     # If rioxarray is installed, set the coordinate reference system
     if hasattr(dataarray, "rio"):
-        dataarray = dataarray.rio.write_crs(input_crs="EPSG:3857")
+        dataarray = dataarray.rio.write_crs(input_crs=crs)
 
     return dataarray

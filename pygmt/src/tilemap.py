@@ -133,16 +133,13 @@ def tilemap(
         zoom=zoom,
         source=source,
         lonlat=lonlat,
+        crs="EPSG:4326" if lonlat is True else "EPSG:3857",
         wait=wait,
         max_retries=max_retries,
         zoom_adjust=zoom_adjust,
     )
-
-    # Reproject raster from Spherical Mercator (EPSG:3857) to lonlat (OGC:CRS84) if
-    # bounding box region was provided in lonlat
-    if lonlat and raster.rio.crs == "EPSG:3857":
-        raster = raster.rio.reproject(dst_crs="OGC:CRS84")
-        raster.gmt.gtype = 1  # set to geographic type
+    if lonlat:
+        raster.gmt.gtype = 1  # Set to geographic type
 
     # Only set region if no_clip is None or False, so that plot is clipped to exact
     # bounding box region
