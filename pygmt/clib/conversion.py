@@ -307,7 +307,7 @@ def array_to_datetime(array: Sequence[Any] | np.ndarray) -> np.ndarray:
     >>> # numpy.datetime64 array
     >>> x = np.array(
     ...     ["2010-06-01", "2011-06-01T12", "2012-01-01T12:34:56"],
-    ...     dtype="datetime64[ns]",
+    ...     dtype=np.datetime64,
     ... )
     >>> array_to_datetime(x)
     array(['2010-06-01T00:00:00.000000000', '2011-06-01T12:00:00.000000000',
