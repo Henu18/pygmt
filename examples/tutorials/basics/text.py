@@ -156,7 +156,7 @@ fig.show()
 # ----------------------------
 #
 # It is also possible to add text labels via an external input file containing ``x``,
-# ``y``, and ``text`` columns. Addionaly, columns to set the ``angle``, ``front``,
+# ``y``, and ``text`` columns. Addtionally, columns to set the ``angle``, ``front``,
 # and ``justify`` parameters can be provided. Here, we give a complete example.
 
 fig = pygmt.Figure()
